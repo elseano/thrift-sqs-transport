@@ -1,3 +1,4 @@
+require 'thrift'
 require 'fog'
 
 module Thrift

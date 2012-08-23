@@ -1,4 +1,43 @@
 = thrift-sqs-transport
 
-A transport for Thrift using Amazon's Simple Queue Service.
+A transport for Thrift using Amazon's Simple Queue Service. Its best to use this with a text-based protocol, as SQS rejects data streams from the binary protocols.
 
+The Thrift 0.8 gem doesn't contain the JsonProtocol. To use that, see my other gem: thrift-json.
+
+= Example
+
+    struct Message {
+      1: string subject;
+      2: string body;
+    }
+
+    service LoggerService {
+      oneway void send_message(1: Message message);
+    }
+
+== Server Example
+
+    # The handler class to respond to service calls.
+    class LoggerHandler
+      def send_message(message)
+        puts "I have a message. Here it is: #{message.inspect}"
+      end
+    end
+
+    # Setup the server transport. See the source for the options available.
+    transport = Thrift::SqsServerTransport.new("my-queue", aws_key, aws_secret, :delete => true)
+    handler = LoggerHandler.new
+    processor = LoggerService::Processor.new(handler)
+    server = Thrift::SimpleServer.new(processor, transport, Thrift::BaseTransportFactory.new, Thrift::JsonProtocolFactory.new)
+
+    server.serve
+
+== Client Example
+
+    transport = Thrift::SqsTransport.new("my-queue", aws_key, aws_secret)
+    protocol = Thrift::JsonProtocol.new(transport)
+
+    message = Message.new(subject: "Hello", body: "World!")
+
+    logger = LoggerService::Client.new(protocol)
+    logger.send_message(message)
