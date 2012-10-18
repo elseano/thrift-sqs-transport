@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Thrift-sqs-transport : A transport for Thrift using Amazon's Simple Queue Service." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Thrift-sqs-transport</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/elseano/thrift-sqs-transport">View on GitHub</a>
+
+          <h1 id="project_title">Thrift-sqs-transport</h1>
+          <h2 id="project_tagline">A transport for Thrift using Amazon's Simple Queue Service.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/elseano/thrift-sqs-transport/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/elseano/thrift-sqs-transport/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>= thrift-sqs-transport</p>
+
+<p>A transport for Thrift using Amazon's Simple Queue Service. Its best to use this with a text-based protocol, as SQS rejects data streams from the binary protocols.</p>
+
+<p>The Thrift 0.8 gem doesn't contain the JsonProtocol. To use that, see my other gem: thrift-json.</p>
+
+<p>= Example</p>
+
+<pre><code>struct Message {
+  1: string subject;
+  2: string body;
+}
+
+service LoggerService {
+  oneway void send_message(1: Message message);
+}
+</code></pre>
+
+<p>== Server Example</p>
+
+<pre><code># The handler class to respond to service calls.
+class LoggerHandler
+  def send_message(message)
+    puts "I have a message. Here it is: #{message.inspect}"
+  end
+end
+
+# Setup the server transport. See the source for the options available.
+transport = Thrift::SqsServerTransport.new("my-queue", aws_key, aws_secret, :delete =&gt; true)
+handler = LoggerHandler.new
+processor = LoggerService::Processor.new(handler)
+server = Thrift::SimpleServer.new(processor, transport, Thrift::BaseTransportFactory.new, Thrift::JsonProtocolFactory.new)
+
+server.serve
+</code></pre>
+
+<p>== Client Example</p>
+
+<pre><code>transport = Thrift::SqsTransport.new("my-queue", aws_key, aws_secret)
+protocol = Thrift::JsonProtocol.new(transport)
+
+message = Message.new(subject: "Hello", body: "World!")
+
+logger = LoggerService::Client.new(protocol)
+logger.send_message(message)
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Thrift-sqs-transport maintained by <a href="https://github.com/elseano">elseano</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
